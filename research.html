@@ -19,8 +19,24 @@
         section h2 { color: var(--primary-color); border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; margin-top: 0; display: flex; align-items: center; gap: 10px; }
         h3 { color: var(--secondary-color); margin-top: 25px; margin-bottom: 10px; font-size: 1.4em;}
         .nav-buttons { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; background: white; padding: 15px; border-radius: 10px; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .btn { display: inline-block; padding: 10px 20px; background-color: var(--primary-color); color: white; text-decoration: none; border-radius: 5px; font-weight: bold; transition: background-color 0.3s; }
-        .btn:hover, .btn.active { background-color: var(--accent-color); }
+        .btn { 
+            display: inline-block; 
+            padding: 12px 25px; 
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%); 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 30px; /* Makes them pill-shaped */
+            font-weight: bold; 
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease; 
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+            border: none;
+        }
+        .btn:hover, .btn.active { 
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.5);
+            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+        }
         footer { text-align: center; padding: 20px; color: #666; margin-top: 40px; border-top: 1px solid var(--border-color); }
         
         /* Research Specific CSS */
