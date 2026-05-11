@@ -93,12 +93,12 @@
     </div>
 
 
-    <section>
+   <section>
         <h2><i class="fas fa-chart-area"></i> Interactive Phase Portrait Generator</h2>
         
         <div class="simulation-container">
             <p style="font-size: 0.95em; color: #555; margin-bottom: 20px;">
-                <em>Define parameters, equations, and customize titles/labels. Use <code>$ ... $</code> for LaTeX formatting. Click the graph to draw trajectories, and use Undo/Redo as needed!</em>
+                <em>Define parameters, equations, and customize titles/labels. Use <code>$ ... $</code> for LaTeX formatting. Click the graph to draw trajectories!</em>
             </p>
 
             <div class="controls-grid">
@@ -141,6 +141,10 @@
                     <label for="labelSize">Axis Label Size:</label>
                     <input type="number" id="labelSize" value="16" min="10" max="40">
                 </div>
+                <div class="control-group">
+                    <label for="tickSize">Tick Font Size:</label>
+                    <input type="number" id="tickSize" value="12" min="8" max="30">
+                </div>
 
                 <div class="control-group" style="border-top: 1px solid #eee; padding-top: 15px; margin-top: 5px;">
                     <label for="xMin">x Min:</label>
@@ -180,6 +184,7 @@
                     <label><input type="checkbox" id="showAxes" checked> Show Axes</label>
                     <label><input type="checkbox" id="showArrows" checked> Show Vectors</label>
                     <label><input type="checkbox" id="showEquilibria" checked> Show Equilibria</label>
+                    <label><input type="checkbox" id="showCanvasLegend" checked> Show Canvas Legend</label>
                     <label style="color: #e67e22;"><input type="checkbox" id="animateFlow"> <strong><i class="fas fa-play"></i> Animate Flow</strong></label>
                 </div>
                 
@@ -187,11 +192,12 @@
                     <button id="undoBtn" class="btn" disabled><i class="fas fa-undo"></i> Undo</button>
                     <button id="redoBtn" class="btn" disabled><i class="fas fa-redo"></i> Redo</button>
                     <button id="clearLinesBtn" class="btn"><i class="fas fa-eraser"></i> Clear Trajectories</button>
+                    <button id="fullscreenBtn" class="btn" style="background-color: #9b59b6; color: white;"><i class="fas fa-expand"></i> Full Screen</button>
                     <button id="resetBtn" class="btn" style="background-color: #e74c3c; color: white;"><i class="fas fa-bomb"></i> Reset System</button>
                 </div>
             </div>
 
-            <div class="canvas-wrapper">
+            <div class="canvas-wrapper" id="canvasContainer">
                 <canvas id="vectorFieldCanvas" width="850" height="600"></canvas>
             </div>
             
@@ -212,17 +218,30 @@
                         <label for="colormap" style="font-weight: bold; margin-bottom: 5px; font-size: 0.9em; color: var(--secondary-color);">Vector Colormap:</label>
                         <select id="colormap" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
                             <option value="default">Jet (Blue to Red)</option>
+                            <option value="plasma">Plasma (Purple to Yellow)</option>
+                            <option value="magma">Magma (Black to White)</option>
+                            <option value="inferno">Inferno (Black to Yellow)</option>
+                            <option value="turbo">Turbo (Smooth Rainbow)</option>
                             <option value="cool">Cool (Cyan to Magenta)</option>
                             <option value="hot">Hot (Red to Yellow)</option>
                             <option value="viridis">Viridis (Purple to Green)</option>
+                            <option value="ocean">Ocean (Deep Blue to Green)</option>
                             <option value="monochrome">Grayscale</option>
                         </select>
                     </div>
-                    <div style="flex: 1; min-width: 120px; display: flex; flex-direction: column;">
-                        <label for="exportRes" style="font-weight: bold; margin-bottom: 5px; font-size: 0.9em; color: var(--secondary-color); display:flex; justify-content: space-between;">PNG Scale: <span id="valExportRes">1x</span></label>
-                        <input type="range" id="exportRes" min="1" max="5" step="1" value="1" style="width: 100%;">
+                    <div style="flex: 1; min-width: 100px; display: flex; flex-direction: column;">
+                        <label for="exportFormat" style="font-weight: bold; margin-bottom: 5px; font-size: 0.9em; color: var(--secondary-color);">Image Format:</label>
+                        <select id="exportFormat" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                            <option value="png">PNG (HQ, Transparent)</option>
+                            <option value="jpeg">JPEG (Standard)</option>
+                            <option value="webp">WebP (Modern)</option>
+                        </select>
                     </div>
-                    <button id="exportBtn" class="btn" style="background-color: #27ae60; color: white; height: 38px; padding: 0 15px;"><i class="fas fa-camera"></i> Save Static PNG</button>
+                    <div style="flex: 1; min-width: 120px; display: flex; flex-direction: column;">
+                        <label for="exportRes" style="font-weight: bold; margin-bottom: 5px; font-size: 0.9em; color: var(--secondary-color); display:flex; justify-content: space-between;">Img Scale: <span id="valExportRes">1x</span></label>
+                        <input type="range" id="exportRes" min="1" max="10" step="1" value="1" style="width: 100%;">
+                    </div>
+                    <button id="exportBtn" class="btn" style="background-color: #27ae60; color: white; height: 38px; padding: 0 15px;"><i class="fas fa-camera"></i> Save Static Image</button>
                 </div>
 
                 <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: flex-start; align-items: flex-end; margin-top: 15px;">
@@ -253,13 +272,14 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const canvas = document.getElementById('vectorFieldCanvas');
+        const canvasContainer = document.getElementById('canvasContainer');
         const defaultCtx = canvas.getContext('2d', { willReadFrequently: true });
         const errorMsg = document.getElementById('errorMessage');
         const paramListInput = document.getElementById('paramList');
         const dynamicSlidersContainer = document.getElementById('dynamicSliders');
         
-        const baseWidth = 850;
-        const baseHeight = 600;
+        let baseWidth = 850;
+        let baseHeight = 600;
 
         const bgCanvas = document.createElement('canvas');
         const bgCtx = bgCanvas.getContext('2d', { willReadFrequently: true });
@@ -268,7 +288,7 @@
         const bufferCtx = bufferCanvas.getContext('2d', { willReadFrequently: true });
         
         let trajectories = []; 
-        let redoStack = []; // Added for Redo functionality
+        let redoStack = []; 
         let trajColorIndex = 0;
         const trajColors = ["#e74c3c", "#f39c12", "#2ecc71", "#3498db", "#9b59b6", "#1abc9c", "#e84393", "#00cec9", "#fdcb6e", "#d35400"];
 
@@ -291,7 +311,6 @@
             }
         };
 
-        // Core Math formatting applying greek letters, subscripts, superscripts
         function applyMathLogic(mathStr) {
             const greek = { '\\alpha':'α', '\\beta':'β', '\\gamma':'γ', '\\delta':'δ', '\\epsilon':'ε', '\\zeta':'ζ', '\\eta':'η', '\\theta':'θ', '\\lambda':'λ', '\\mu':'μ', '\\nu':'ν', '\\xi':'ξ', '\\pi':'π', '\\rho':'ρ', '\\sigma':'σ', '\\tau':'τ', '\\phi':'φ', '\\chi':'χ', '\\psi':'ψ', '\\omega':'ω', '\\Delta':'Δ', '\\Gamma':'Γ', '\\Theta':'Θ', '\\Lambda':'Λ', '\\Xi':'Ξ', '\\Pi':'Π', '\\Sigma':'Σ', '\\Phi':'Φ', '\\Psi':'Ψ', '\\Omega':'Ω', '\\infty':'∞' };
             for(let key in greek) mathStr = mathStr.split(key).join(greek[key]);
@@ -304,18 +323,14 @@
                 const sups = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','+':'⁺','-':'⁻','n':'ⁿ'};
                 return sups[p1] || '^' + p1;
             });
-            return mathStr.replace(/[{}]/g, ''); // Strip structural brackets
+            return mathStr.replace(/[{}]/g, '');
         }
 
-        // Updated parseMathText to isolate and format inside $...$ signs
         function parseMathText(str) {
-            if (!str.includes('$')) {
-                return applyMathLogic(str); // Fallback: process entire string if no $ used
-            }
+            if (!str.includes('$')) return applyMathLogic(str);
             return str.replace(/\$(.*?)\$/g, (match, p1) => applyMathLogic(p1));
         }
 
-        // --- Rest of helper functions remain the same ---
         function buildSliders() {
             const items = paramListInput.value.split(',').map(s => s.trim()).filter(s => s);
             dynamicSlidersContainer.innerHTML = '';
@@ -390,6 +405,11 @@
             if (colormap === 'cool') { hue = 180 + relativeMag * 120; sat = '80%'; light = '50%'; } 
             else if (colormap === 'hot') { hue = 0 + relativeMag * 60; sat = '100%'; light = '50%'; } 
             else if (colormap === 'viridis') { hue = 280 - relativeMag * 160; sat = '70%'; light = '50%'; } 
+            else if (colormap === 'plasma') { hue = 280 - relativeMag * 220; sat = '100%'; light = (30 + relativeMag * 40) + '%'; }
+            else if (colormap === 'magma') { hue = 300 - relativeMag * 260; sat = '100%'; light = (10 + relativeMag * 80) + '%'; }
+            else if (colormap === 'inferno') { hue = 260 - relativeMag * 200; sat = '100%'; light = (20 + relativeMag * 60) + '%'; }
+            else if (colormap === 'turbo') { hue = 280 - relativeMag * 280; sat = '100%'; light = '50%'; }
+            else if (colormap === 'ocean') { hue = 220 - relativeMag * 100; sat = '90%'; light = (30 + relativeMag * 40) + '%'; }
             else if (colormap === 'monochrome') { hue = 0; sat = '0%'; light = (70 - relativeMag * 60) + '%'; } 
             else { hue = Math.max(0, 240 - (relativeMag * 240)); sat = '80%'; light = '50%'; }
             return `hsla(${hue}, ${sat}, ${light}, ${alpha})`;
@@ -496,11 +516,9 @@
 
         function animateLoop() {
             if (!isAnimating) return;
-            
             bufferCtx.drawImage(bgCanvas, 0, 0);
             const w = canvas.width; const h = canvas.height;
             const scaleFactor = w / baseWidth; 
-            
             const sys = currentSystem; const colormap = document.getElementById('colormap').value;
             
             for (let i = 0; i < particles.length; i++) {
@@ -530,25 +548,46 @@
                 }
                 
                 p.age++;
-                if (p.age > p.life || p.x < sys.xMin || p.x > sys.xMax || p.y < sys.yMin || p.y > sys.yMax) {
-                    resetParticle(i);
-                }
+                if (p.age > p.life || p.x < sys.xMin || p.x > sys.xMax || p.y < sys.yMin || p.y > sys.yMax) resetParticle(i);
             }
-            
             defaultCtx.drawImage(bufferCanvas, 0, 0);
             animationId = requestAnimationFrame(animateLoop);
         }
 
-        // Updating Undo/Redo Button States
         function updateUndoRedoButtons() {
             document.getElementById('undoBtn').disabled = trajectories.length === 0;
             document.getElementById('redoBtn').disabled = redoStack.length === 0;
         }
 
+        // Full Screen Logic
+        document.getElementById('fullscreenBtn').addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                canvasContainer.requestFullscreen().catch(err => {
+                    alert(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) {
+                baseWidth = window.screen.width;
+                baseHeight = window.screen.height;
+            } else {
+                baseWidth = 850;
+                baseHeight = 600;
+            }
+            canvas.width = baseWidth;
+            canvas.height = baseHeight;
+            particles.forEach(p => p.history = []);
+            renderField();
+        });
+
         function renderField(targetCtx = defaultCtx, w = canvas.width, h = canvas.height) {
             let isMain = (targetCtx === defaultCtx);
             let drawCtx = isMain ? bgCtx : targetCtx; 
-            const scaleFactor = w / baseWidth; 
+            const scaleFactor = w / 850; // Use static 850 for scaling logic relative to text
             
             if (isMain) { 
                 bgCanvas.width = w; bgCanvas.height = h; 
@@ -563,10 +602,12 @@
             const steps = parseInt(document.getElementById('gridSteps').value); const arrowScale = parseFloat(document.getElementById('arrowScale').value);
             const showEq = document.getElementById('showEquilibria').checked; const showAxes = document.getElementById('showAxes').checked;
             const showArrows = document.getElementById('showArrows').checked; const colormap = document.getElementById('colormap').value;
+            const showCanvasLegend = document.getElementById('showCanvasLegend').checked;
             let numTicks = parseInt(document.getElementById('numTicks').value);
             
             const titleSize = parseInt(document.getElementById('titleSize').value) || 20;
             const labelSize = parseInt(document.getElementById('labelSize').value) || 16;
+            const tickSize = parseInt(document.getElementById('tickSize').value) || 12;
             
             document.getElementById('valArrowScale').innerText = arrowScale.toFixed(1);
             document.getElementById('valGridSteps').innerText = steps;
@@ -609,11 +650,11 @@
                 drawCtx.beginPath(); drawCtx.moveTo(drawYAxisAt, 0); drawCtx.lineTo(drawYAxisAt, h); drawCtx.stroke(); 
                 drawCtx.beginPath(); drawCtx.moveTo(0, drawXAxisAt); drawCtx.lineTo(w, drawXAxisAt); drawCtx.stroke(); 
 
-                drawCtx.fillStyle = "#333"; drawCtx.font = `${12 * scaleFactor}px Arial`; drawCtx.textAlign = "center"; drawCtx.textBaseline = "top";
-                let tickSize = 4 * scaleFactor;
+                drawCtx.fillStyle = "#333"; drawCtx.font = `${tickSize * scaleFactor}px Arial`; drawCtx.textAlign = "center"; drawCtx.textBaseline = "top";
+                let tSize = 4 * scaleFactor;
                 for(let i=0; i<=numTicks; i++) {
                     let val = xMin + i*(xMax-xMin)/numTicks; let cx = (val - xMin) / (xMax - xMin) * w;
-                    drawCtx.beginPath(); drawCtx.moveTo(cx, drawXAxisAt - tickSize); drawCtx.lineTo(cx, drawXAxisAt + tickSize); drawCtx.stroke();
+                    drawCtx.beginPath(); drawCtx.moveTo(cx, drawXAxisAt - tSize); drawCtx.lineTo(cx, drawXAxisAt + tSize); drawCtx.stroke();
                     let labelY = drawXAxisAt + (6 * scaleFactor); if(drawXAxisAt > h - (15 * scaleFactor)) labelY = drawXAxisAt - (15 * scaleFactor); 
                     drawCtx.fillText(val.toFixed(2), cx, labelY);
                 }
@@ -621,12 +662,11 @@
                 drawCtx.textAlign = "right"; drawCtx.textBaseline = "middle";
                 for(let i=0; i<=numTicks; i++) {
                     let val = yMin + i*(yMax-yMin)/numTicks; let cy = h - ((val - yMin) / (yMax - yMin) * h);
-                    drawCtx.beginPath(); drawCtx.moveTo(drawYAxisAt - tickSize, cy); drawCtx.lineTo(drawYAxisAt + tickSize, cy); drawCtx.stroke();
+                    drawCtx.beginPath(); drawCtx.moveTo(drawYAxisAt - tSize, cy); drawCtx.lineTo(drawYAxisAt + tSize, cy); drawCtx.stroke();
                     let labelX = drawYAxisAt - (6 * scaleFactor); if(drawYAxisAt < (30 * scaleFactor)) { drawCtx.textAlign = "left"; labelX = drawYAxisAt + (6 * scaleFactor); } else { drawCtx.textAlign = "right"; }
                     drawCtx.fillText(val.toFixed(2), labelX, cy);
                 }
 
-                // Custom Latex-Parsed Axes Labels with DYNAMIC FONT SIZE
                 const textX = parseMathText(document.getElementById('xLabel').value);
                 const textY = parseMathText(document.getElementById('yLabel').value);
                 drawCtx.font = `italic bold ${labelSize * scaleFactor}px 'Segoe UI', Arial`; drawCtx.fillStyle = "#000";
@@ -685,6 +725,37 @@
                 });
             }
 
+            // Draw Dynamic Canvas Legend
+            if (showCanvasLegend) {
+                drawCtx.font = `${14 * scaleFactor}px 'Segoe UI', Arial`;
+                drawCtx.textAlign = "left"; drawCtx.textBaseline = "top";
+                let legendX = w - (220 * scaleFactor);
+                let legendY = 20 * scaleFactor;
+                let lh = 20 * scaleFactor;
+                let padding = 10 * scaleFactor;
+                
+                let lines = [
+                    "System Equations:",
+                    `dx/dt = ${parseMathText(strDx)}`,
+                    `dy/dt = ${parseMathText(strDy)}`,
+                    "",
+                    "Parameters:"
+                ];
+                paramNames.forEach(n => lines.push(`${parseMathText(n)} = ${paramState[n].val.toFixed(3)}`));
+
+                drawCtx.fillStyle = "rgba(255, 255, 255, 0.85)";
+                drawCtx.strokeStyle = "#ccc"; drawCtx.lineWidth = 1 * scaleFactor;
+                drawCtx.fillRect(legendX - padding, legendY - padding, (210 * scaleFactor), (lines.length * lh) + (padding * 2));
+                drawCtx.strokeRect(legendX - padding, legendY - padding, (210 * scaleFactor), (lines.length * lh) + (padding * 2));
+                
+                drawCtx.fillStyle = "#333";
+                lines.forEach((line, idx) => {
+                    if(idx === 0 || idx === 4) drawCtx.font = `bold ${14 * scaleFactor}px 'Segoe UI', Arial`;
+                    else drawCtx.font = `${14 * scaleFactor}px 'Segoe UI', Arial`;
+                    drawCtx.fillText(line, legendX, legendY + (idx * lh));
+                });
+            }
+
             drawCtx.fillStyle = "rgba(0, 0, 0, 0.5)"; drawCtx.font = `italic bold ${16 * scaleFactor}px Arial`;
             drawCtx.textAlign = "right"; drawCtx.textBaseline = "bottom";
             drawCtx.fillText("© Swadesh", w - (10 * scaleFactor), h - (10 * scaleFactor));
@@ -697,25 +768,36 @@
             }
         }
 
-        // Static PNG Export
+        // Static Image Export
         document.getElementById('exportBtn').addEventListener('click', function() {
             const scale = parseInt(document.getElementById('exportRes').value);
+            const format = document.getElementById('exportFormat').value;
             const offCanvas = document.createElement('canvas');
-            offCanvas.width = canvas.width * scale; offCanvas.height = canvas.height * scale;
+            
+            // Revert to default logic for offscreen render to avoid full-screen dimensions in export unless intended
+            let exportW = 850 * scale; 
+            let exportH = 600 * scale;
+            if(document.fullscreenElement) { exportW = baseWidth * scale; exportH = baseHeight * scale; }
+            
+            offCanvas.width = exportW; offCanvas.height = exportH;
             const offCtx = offCanvas.getContext('2d');
+            
+            // If JPEG, forcefully render a solid white background first
+            if (format === 'jpeg') { offCtx.fillStyle = 'white'; offCtx.fillRect(0, 0, exportW, exportH); }
+            
             renderField(offCtx, offCanvas.width, offCanvas.height);
             const link = document.createElement('a');
-            link.download = `Phase_Portrait_Static_${new Date().getTime()}.png`;
-            link.href = offCanvas.toDataURL('image/png', 1.0); link.click();
+            link.download = `Phase_Portrait_${new Date().getTime()}.${format}`;
+            link.href = offCanvas.toDataURL(`image/${format}`, 1.0); link.click();
         });
 
-        // Animated Video Export with Resolution Swap Fix
+        // Animated Video Export
         document.getElementById('exportVideoBtn').addEventListener('click', function() {
             if (mediaRecorder && mediaRecorder.state === 'recording') {
                 mediaRecorder.stop();
                 canvas.width = baseWidth;
                 canvas.height = baseHeight;
-                particles.forEach(p => p.history = []); // FIX: Stop wild canvas history stretch
+                particles.forEach(p => p.history = []);
                 renderField();
 
                 this.innerHTML = '<i class="fas fa-video"></i> Record Animation (WebM)';
@@ -726,9 +808,11 @@
                     document.getElementById('animateFlow').checked = true;
                 }
                 const scale = parseFloat(document.getElementById('videoRes').value);
-                canvas.width = baseWidth * scale;
-                canvas.height = baseHeight * scale;
-                particles.forEach(p => p.history = []); // FIX: Clear history so small-canvas trails don't bridge to 4K canvas
+                let w = document.fullscreenElement ? baseWidth : 850;
+                let h = document.fullscreenElement ? baseHeight : 600;
+                canvas.width = w * scale;
+                canvas.height = h * scale;
+                particles.forEach(p => p.history = []); 
                 renderField(); 
                 
                 const stream = canvas.captureStream(30); 
@@ -751,7 +835,6 @@
             }
         });
 
-        // Handle Interactive Plotting (Clear Redo Stack)
         canvas.addEventListener('mousedown', function(e) {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
@@ -765,11 +848,10 @@
             const color = trajColors[trajColorIndex % trajColors.length]; trajColorIndex++;
             
             trajectories.push({x: mathX, y: mathY, color: color});
-            redoStack = []; // Clear redo stack on new interaction
+            redoStack = []; 
             renderField();
         });
 
-        // Undo Logic
         document.getElementById('undoBtn').addEventListener('click', () => {
             if (trajectories.length > 0) {
                 redoStack.push(trajectories.pop());
@@ -777,7 +859,6 @@
             }
         });
 
-        // Redo Logic
         document.getElementById('redoBtn').addEventListener('click', () => {
             if (redoStack.length > 0) {
                 trajectories.push(redoStack.pop());
@@ -795,7 +876,7 @@
         const inputs = document.querySelectorAll('.controls-grid > .control-group input:not([type="range"], #paramList)');
         inputs.forEach(input => { input.addEventListener('input', () => renderField()); });
         
-        ['arrowScale', 'gridSteps', 'numTicks', 'showAxes', 'showArrows', 'showEquilibria', 'colormap', 'animateFlow', 'titleSize', 'labelSize', 'plotTitle'].forEach(id => {
+        ['arrowScale', 'gridSteps', 'numTicks', 'showAxes', 'showArrows', 'showEquilibria', 'showCanvasLegend', 'colormap', 'animateFlow', 'titleSize', 'labelSize', 'tickSize', 'plotTitle'].forEach(id => {
             document.getElementById(id).addEventListener(id.includes('show') || id === 'colormap' || id === 'animateFlow' ? 'change' : 'input', () => renderField());
         });
 
@@ -812,7 +893,7 @@
             document.getElementById('yMin').value = -0.5; document.getElementById('yMax').value = 2.5;
             
             document.getElementById('plotTitle').value = "Phase Portrait of $\\alpha$ vs $\\beta$";
-            document.getElementById('titleSize').value = 20;
+            document.getElementById('titleSize').value = 20; document.getElementById('tickSize').value = 12;
             document.getElementById('xLabel').value = "$X$ Axis"; document.getElementById('yLabel').value = "$Y$ Axis";
             document.getElementById('labelSize').value = 16;
             
@@ -821,15 +902,14 @@
             document.getElementById('numTicks').value = 6; document.getElementById('animDensity').value = 400; document.getElementById('valAnimDensity').innerText = "400";
             
             document.getElementById('showAxes').checked = true; document.getElementById('showArrows').checked = true;
-            document.getElementById('showEquilibria').checked = true; document.getElementById('animateFlow').checked = false;
+            document.getElementById('showEquilibria').checked = true; document.getElementById('showCanvasLegend').checked = true; document.getElementById('animateFlow').checked = false;
             
             document.getElementById('exportRes').value = "1"; document.getElementById('valExportRes').innerText = "1x";
-            document.getElementById('colormap').value = "default"; document.getElementById('videoRes').value = "1";
+            document.getElementById('colormap').value = "default"; document.getElementById('exportFormat').value = "png"; document.getElementById('videoRes').value = "1";
             
             trajectories = []; redoStack = []; trajColorIndex = 0; renderField();
         });
 
-        // Initialization
         buildSliders();
     });
 </script>
