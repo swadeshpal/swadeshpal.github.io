@@ -519,8 +519,37 @@
                     drawEquilibriumMarker(ctx, cx, cy, eq.type);
                 });
             }
+            // Copyright swadesh Watermark
+            targetCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
+            targetCtx.font = "italic bold 16px Arial";
+            targetCtx.textAlign = "right";
+            targetCtx.textBaseline = "bottom";
+            targetCtx.fillText("© Swadesh", w - 10, h - 10);
         }
-
+        // Export Functionality
+        document.getElementById('exportBtn').addEventListener('click', function() {
+            const scale = parseInt(document.getElementById('exportRes').value);
+            const format = document.getElementById('exportFormat').value; // 'image/png' or 'image/jpeg'
+            
+            // Create offscreen high-res canvas
+            const offCanvas = document.createElement('canvas');
+            offCanvas.width = canvas.width * scale;
+            offCanvas.height = canvas.height * scale;
+            const offCtx = offCanvas.getContext('2d');
+            
+            // Auto-scale drawing instructions
+            offCtx.scale(scale, scale);
+            
+            // Render on high-res canvas
+            renderField(offCtx, canvas.width, canvas.height);
+            
+            // Trigger Download
+            const link = document.createElement('a');
+            const ext = format === 'image/jpeg' ? 'jpg' : 'png';
+            link.download = `Phase_Portrait_@swadesh_${new Date().getTime()}.${ext}`;
+            link.href = offCanvas.toDataURL(format, 1.0);
+            link.click();
+        });
         // Add Multi-Colored Trajectory on Canvas Click
         canvas.addEventListener('mousedown', function(e) {
             const rect = canvas.getBoundingClientRect();
