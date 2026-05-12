@@ -29,8 +29,24 @@
         h3 { color: var(--secondary-color); margin-top: 25px; margin-bottom: 10px; font-size: 1.4em;}
         .nav-buttons { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; background: white; padding: 15px; border-radius: 10px; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         
-        .btn { display: inline-block; padding: 10px 20px; background-color: #e8f4f8; color: #2980b9; text-decoration: none; border-radius: 6px; font-weight: 600; transition: all 0.2s ease-in-out; border: none; cursor: pointer; }
-        .btn:hover, .btn.active { background-color: #3498db; color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn { 
+            display: inline-block; 
+            padding: 12px 25px; 
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%); 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 30px; /* Makes them pill-shaped */
+            font-weight: bold; 
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease; 
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+            border: none;
+        }
+        .btn:hover, .btn.active { 
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.5);
+            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+        }
         footer { text-align: center; padding: 20px; color: #666; margin-top: 40px; border-top: 1px solid var(--border-color); }
         
         /* Research Specific CSS */
@@ -70,44 +86,18 @@
     <div class="nav-buttons">
         <a href="index.html" class="btn"><i class="fas fa-user"></i> About</a>
         <a href="experience.html" class="btn"><i class="fas fa-briefcase"></i> Experience & Education</a>
-        <a href="research.html" class="btn active"><i class="fas fa-microscope"></i> Research</a>
+        <a href="research.html" class="btn"><i class="fas fa-microscope"></i> Research</a>
         <a href="publications.html" class="btn"><i class="fas fa-book"></i> Publications</a>
-        <a href="presentations.html" class="btn"><i class="fas fa-chalkboard-teacher"></i> Presentations</a>
-        <a href="Resume-Swadesh_Pal.pdf" class="btn" target="_blank"><i class="fas fa-file-pdf"></i> Resume</a>
+        <a href="live_plots.html" class="btn active"><i class="fas fa-chart-line"></i> Live Plots</a>
     </div>
 
-    <header>
-        <img src="https://via.placeholder.com/180x180.png?text=Swadesh+Pal" alt="Swadesh Pal" class="profile-pic">
-        <div class="header-info">
-            <h1>Swadesh Pal</h1>
-            <h2>Postdoctoral Fellow in Mathematics, Wilfrid Laurier University</h2>
-            <ul class="contact-info">
-                <li><i class="fas fa-map-marker-alt"></i> Waterloo, ON, Canada</li>
-                <li><i class="fas fa-envelope"></i> <a href="mailto:palkkeswadesh@gmail.com">palkkeswadesh@gmail.com</a></li>
-            </ul>
-        </div>
-    </header>
 
     <section>
-        <h2><i class="fas fa-flask"></i> Research Overview</h2>
-        
-        <div class="research-topic">
-            <h3><i class="fas fa-brain" style="color: var(--accent-color);"></i> Mathematical Neuroscience</h3>
-            <p>Modeling of neurodegenerative disorders, primarily Alzheimer's and Parkinson's diseases. Investigating complex dynamics of toxic protein propagation and evaluating potential anti-amyloid-beta therapies.</p>
-        </div>
+        <h2><i class="fas fa-flask"></i> Vector Field Generator</h2>
 
         <div class="research-topic">
-            <h3><i class="fas fa-leaf" style="color: var(--accent-color);"></i> Mathematical Biology & Ecological Modeling</h3>
-            <p>Developing and analyzing ecological models such as predator-prey systems. Exploring how spatial and temporal nonlocality, fear effects, and resource consumption influence population distributions.</p>
-            
+
             <div class="simulation-container">
-                <h4 style="color: var(--primary-color); margin-bottom: 5px;">
-                    <i class="fas fa-chart-area"></i> Generalized Phase Plane Generator
-                </h4>
-                <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">
-                    <em><strong>Interactive Phase Portrait:</strong> Define parameters, set boundaries, write ODEs, and click the graph to draw trajectories!</em>
-                </p>
-
                 <div class="controls-grid">
                     
                     <div class="control-group full-width">
