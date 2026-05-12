@@ -97,7 +97,14 @@
 
         <div class="research-topic">
 
-            <div class="simulation-container">
+                       <div class="simulation-container">
+                <h4 style="color: var(--primary-color); margin-bottom: 5px;">
+                    <i class="fas fa-chart-area"></i> Generalized Phase Plane Generator
+                </h4>
+                <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">
+                    <em><strong>Interactive Phase Portrait:</strong> Define parameters, set boundaries, write ODEs, and click the graph to draw trajectories! Use the export tool to download high-res images for papers.</em>
+                </p>
+
                 <div class="controls-grid">
                     
                     <div class="control-group full-width">
@@ -149,8 +156,25 @@
                         <input type="checkbox" id="showEquilibria" checked>
                         <label for="showEquilibria">Show Equilibria</label>
                     </div>
+
+                    <div class="control-group full-width" style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 15px;">
+                        <label>Export Graph Settings:</label>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                            <select id="exportRes" style="flex: 1; max-width: 150px;">
+                                <option value="1">1x (Standard)</option>
+                                <option value="2">2x (High Res)</option>
+                                <option value="3">3x (Print 300dpi)</option>
+                                <option value="4">4x (Ultra HD)</option>
+                            </select>
+                            <select id="exportFormat" style="flex: 1; max-width: 120px;">
+                                <option value="image/png">PNG</option>
+                                <option value="image/jpeg">JPEG</option>
+                            </select>
+                            <button id="exportBtn" class="btn" style="background-color: #27ae60; color: white;"><i class="fas fa-download"></i> Export Graph</button>
+                        </div>
+                    </div>
                     
-                    <div class="control-group full-width" style="display: flex; flex-direction: row; gap: 10px; justify-content: center; margin-top: 5px;">
+                    <div class="control-group full-width" style="display: flex; flex-direction: row; gap: 10px; justify-content: center; margin-top: 15px;">
                         <button id="clearLinesBtn" class="btn"><i class="fas fa-eraser"></i> Clear Trajectories</button>
                         <button id="resetBtn" class="btn" style="background-color: #e74c3c; color: white;"><i class="fas fa-undo"></i> Reset Default System</button>
                     </div>
@@ -170,14 +194,14 @@
     </section>
 
     <footer>
-        <p>&copy; 2026 Swadesh Pal. All rights reserved.</p>
+        <p>&copy; 2026 Swadesh Pal (@swadesh). All rights reserved.</p>
     </footer>
 </div>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const canvas = document.getElementById('vectorFieldCanvas');
-        const ctx = canvas.getContext('2d');
+        const defaultCtx = canvas.getContext('2d');
         const errorMsg = document.getElementById('errorMessage');
         const paramListInput = document.getElementById('paramList');
         const dynamicSlidersContainer = document.getElementById('dynamicSliders');
@@ -186,7 +210,6 @@
         let trajColorIndex = 0;
         const trajColors = ["#e74c3c", "#f39c12", "#2ecc71", "#3498db", "#9b59b6", "#1abc9c", "#e84393", "#00cec9", "#fdcb6e", "#d35400"];
 
-        // State object to hold value, min, max for each parameter
         let paramState = { 
             a: {val: 0.6, min: -5, max: 5}, 
             b: {val: 1.3, min: -5, max: 5}, 
@@ -194,7 +217,7 @@
             d: {val: 1.0, min: -5, max: 5} 
         };
 
-        // Rebuild Sliders based on the text input
+        // Rebuild Sliders
         function buildSliders() {
             const names = paramListInput.value.split(',').map(s => s.trim()).filter(s => s);
             dynamicSlidersContainer.innerHTML = '';
@@ -217,7 +240,6 @@
                 dynamicSlidersContainer.appendChild(div);
             });
             
-            // Event listener for moving the slider (up to 3 decimal places)
             dynamicSlidersContainer.querySelectorAll('input[type="range"][data-type="param-slider"]').forEach(slider => {
                 slider.addEventListener('input', (e) => {
                     const pName = e.target.getAttribute('data-param');
@@ -228,11 +250,10 @@
                 });
             });
 
-            // Event listener for changing Min/Max bounds dynamically
             dynamicSlidersContainer.querySelectorAll('input[type="number"]').forEach(input => {
                 input.addEventListener('change', (e) => {
                     const pName = e.target.getAttribute('data-param');
-                    const boundType = e.target.getAttribute('data-bound'); // 'min' or 'max'
+                    const boundType = e.target.getAttribute('data-bound'); 
                     const newVal = parseFloat(e.target.value);
                     
                     if (!isNaN(newVal)) {
@@ -240,7 +261,6 @@
                         const slider = dynamicSlidersContainer.querySelector(`input[type="range"][data-param="${pName}"]`);
                         slider[boundType] = newVal;
                         
-                        // Clamp current value if it falls outside the new bounds
                         if (paramState[pName].val < paramState[pName].min) paramState[pName].val = paramState[pName].min;
                         if (paramState[pName].val > paramState[pName].max) paramState[pName].val = paramState[pName].max;
                         
@@ -250,7 +270,6 @@
                     }
                 });
             });
-
             renderField();
         }
 
@@ -258,21 +277,21 @@
             return new Function('x', 'y', ...paramNames, `with(Math) { return ${expression}; }`);
         }
 
-        function drawArrow(ctx, fromx, fromy, tox, toy, magnitude, maxMag) {
+        function drawArrow(targetCtx, fromx, fromy, tox, toy, magnitude, maxMag) {
             const headlen = 5; 
             const angle = Math.atan2(toy - fromy, tox - fromx);
-            ctx.beginPath();
-            ctx.moveTo(fromx, fromy);
-            ctx.lineTo(tox, toy);
-            ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));
-            ctx.moveTo(tox, toy);
-            ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
+            targetCtx.beginPath();
+            targetCtx.moveTo(fromx, fromy);
+            targetCtx.lineTo(tox, toy);
+            targetCtx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));
+            targetCtx.moveTo(tox, toy);
+            targetCtx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
             
             let relativeMag = Math.min(magnitude / (maxMag || 1), 1);
             const hue = Math.max(0, 240 - (relativeMag * 240)); 
-            ctx.strokeStyle = `hsla(${hue}, 80%, 50%, 0.6)`;
-            ctx.lineWidth = 1.0;
-            ctx.stroke();
+            targetCtx.strokeStyle = `hsla(${hue}, 80%, 50%, 0.6)`;
+            targetCtx.lineWidth = 1.0;
+            targetCtx.stroke();
         }
 
         function rk4(x, y, dt, evalDx, evalDy) {
@@ -286,14 +305,12 @@
             };
         }
 
-        // Evaluate Stability Using the Jacobian Trace and Determinant
         function classifyEquilibrium(x, y, evalDx, evalDy) {
             let h = 1e-5;
             let df1dx = (evalDx(x+h, y) - evalDx(x-h, y)) / (2*h);
             let df1dy = (evalDx(x, y+h) - evalDx(x, y-h)) / (2*h);
             let df2dx = (evalDy(x+h, y) - evalDy(x-h, y)) / (2*h);
             let df2dy = (evalDy(x, y+h) - evalDy(x, y-h)) / (2*h);
-
             let trace = df1dx + df2dy;
             let det = df1dx * df2dy - df1dy * df2dx;
 
@@ -306,30 +323,30 @@
             return 'degenerate';
         }
 
-        function drawEquilibriumMarker(ctx, cx, cy, type) {
-            ctx.beginPath();
+        function drawEquilibriumMarker(targetCtx, cx, cy, type) {
+            targetCtx.beginPath();
             if (type === 'stable') {
-                ctx.arc(cx, cy, 6, 0, 2*Math.PI);
-                ctx.fillStyle = "#27ae60"; // Green circle
+                targetCtx.arc(cx, cy, 6, 0, 2*Math.PI);
+                targetCtx.fillStyle = "#27ae60"; 
             } else if (type === 'unstable') {
-                ctx.rect(cx-5, cy-5, 10, 10);
-                ctx.fillStyle = "#e74c3c"; // Red square
+                targetCtx.rect(cx-5, cy-5, 10, 10);
+                targetCtx.fillStyle = "#e74c3c"; 
             } else if (type === 'saddle') {
-                ctx.moveTo(cx, cy - 7);
-                ctx.lineTo(cx - 7, cy + 5);
-                ctx.lineTo(cx + 7, cy + 5);
-                ctx.fillStyle = "#f39c12"; // Orange triangle
+                targetCtx.moveTo(cx, cy - 7);
+                targetCtx.lineTo(cx - 7, cy + 5);
+                targetCtx.lineTo(cx + 7, cy + 5);
+                targetCtx.fillStyle = "#f39c12"; 
             } else {
-                ctx.moveTo(cx, cy - 6);
-                ctx.lineTo(cx + 6, cy);
-                ctx.lineTo(cx, cy + 6);
-                ctx.lineTo(cx - 6, cy);
-                ctx.fillStyle = "#7f8c8d"; // Gray diamond
+                targetCtx.moveTo(cx, cy - 6);
+                targetCtx.lineTo(cx + 6, cy);
+                targetCtx.lineTo(cx, cy + 6);
+                targetCtx.lineTo(cx - 6, cy);
+                targetCtx.fillStyle = "#7f8c8d"; 
             }
-            ctx.fill();
-            ctx.strokeStyle = "white";
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
+            targetCtx.fill();
+            targetCtx.strokeStyle = "white";
+            targetCtx.lineWidth = 1.5;
+            targetCtx.stroke();
         }
 
         function findEquilibria(evalDx, evalDy, xMin, xMax, yMin, yMax) {
@@ -343,15 +360,12 @@
                     for(let iter=0; iter<15; iter++) {
                         let f1 = evalDx(x, y); let f2 = evalDy(x, y);
                         if (Math.abs(f1) + Math.abs(f2) < 1e-7) break;
-
                         let df1dx = (evalDx(x+h, y) - evalDx(x-h, y)) / (2*h);
                         let df1dy = (evalDx(x, y+h) - evalDx(x, y-h)) / (2*h);
                         let df2dx = (evalDy(x+h, y) - evalDy(x-h, y)) / (2*h);
                         let df2dy = (evalDy(x, y+h) - evalDy(x, y-h)) / (2*h);
-
                         let det = df1dx*df2dy - df1dy*df2dx;
                         if(Math.abs(det) < 1e-10) break;
-
                         x -= (df2dy*f1 - df1dy*f2)/det;
                         y -= (-df2dx*f1 + df1dx*f2)/det;
                     }
@@ -370,7 +384,12 @@
             return eqs;
         }
 
-        function renderField() {
+        // Render Field Engine (Now accepts any Canvas Context for High-Res Export)
+        function renderField(targetCtx = defaultCtx, w = canvas.width, h = canvas.height) {
+            // Fill background white for proper JPEG export
+            targetCtx.fillStyle = 'white';
+            targetCtx.fillRect(0, 0, w, h);
+
             const strDx = document.getElementById('eqX').value;
             const strDy = document.getElementById('eqY').value;
             const xMin = parseFloat(document.getElementById('xMin').value);
@@ -390,75 +409,62 @@
             }
             if (isNaN(numTicks) || numTicks < 2) numTicks = 2;
 
-            // Extract dynamic parameter values
             const paramNames = paramListInput.value.split(',').map(s => s.trim()).filter(s => s);
             const pVals = paramNames.map(n => paramState[n].val);
 
-            // Create evaluation closures hiding the parameter arrays
             let evalDx, evalDy;
             try {
                 const rawDx = createMathFunction(strDx, paramNames); 
                 const rawDy = createMathFunction(strDy, paramNames);
                 evalDx = (x, y) => rawDx(x, y, ...pVals);
                 evalDy = (x, y) => rawDy(x, y, ...pVals);
-                
-                evalDx(1, 1); // Test execution
+                evalDx(1, 1); 
                 errorMsg.style.display = "none";
             } catch (e) {
-                errorMsg.innerText = "Error parsing equations. Check your syntax! (e.g. use * for multiplication)";
+                errorMsg.innerText = "Error parsing equations. Check your syntax!";
                 errorMsg.style.display = "block"; return;
             }
 
-            const width = canvas.width; const height = canvas.height;
             const dx = (xMax - xMin) / steps; const dy = (yMax - yMin) / steps;
-            ctx.clearRect(0, 0, width, height);
 
-            // Calculate bounded origin for drawing axes
-            let cx0 = (0 - xMin) / (xMax - xMin) * width;
-            let cy0 = height - ((0 - yMin) / (yMax - yMin) * height);
-            let drawYAxisAt = Math.min(Math.max(cx0, 0), width);
-            let drawXAxisAt = Math.min(Math.max(cy0, 0), height);
+            // Draw Axes & Labels
+            let cx0 = (0 - xMin) / (xMax - xMin) * w;
+            let cy0 = h - ((0 - yMin) / (yMax - yMin) * h);
+            let drawYAxisAt = Math.min(Math.max(cx0, 0), w);
+            let drawXAxisAt = Math.min(Math.max(cy0, 0), h);
 
-            // Draw Main Axes
-            ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 1.5;
-            ctx.beginPath(); ctx.moveTo(drawYAxisAt, 0); ctx.lineTo(drawYAxisAt, height); ctx.stroke(); // Y axis
-            ctx.beginPath(); ctx.moveTo(0, drawXAxisAt); ctx.lineTo(width, drawXAxisAt); ctx.stroke(); // X axis
+            targetCtx.strokeStyle = 'rgba(0,0,0,0.4)'; targetCtx.lineWidth = 1.5;
+            targetCtx.beginPath(); targetCtx.moveTo(drawYAxisAt, 0); targetCtx.lineTo(drawYAxisAt, h); targetCtx.stroke(); 
+            targetCtx.beginPath(); targetCtx.moveTo(0, drawXAxisAt); targetCtx.lineTo(w, drawXAxisAt); targetCtx.stroke(); 
 
-            // Draw Axis Ticks
-            ctx.fillStyle = "#333"; ctx.font = "11px Arial";
-            
-            // X Axis Ticks
-            ctx.textAlign = "center"; ctx.textBaseline = "top";
+            // Axis Ticks
+            targetCtx.fillStyle = "#333"; targetCtx.font = "11px Arial";
+            targetCtx.textAlign = "center"; targetCtx.textBaseline = "top";
             for(let i=0; i<=numTicks; i++) {
                 let val = xMin + i*(xMax-xMin)/numTicks;
-                let cx = (val - xMin) / (xMax - xMin) * width;
-                ctx.beginPath(); ctx.moveTo(cx, drawXAxisAt - 4); ctx.lineTo(cx, drawXAxisAt + 4); ctx.stroke();
-                
+                let cx = (val - xMin) / (xMax - xMin) * w;
+                targetCtx.beginPath(); targetCtx.moveTo(cx, drawXAxisAt - 4); targetCtx.lineTo(cx, drawXAxisAt + 4); targetCtx.stroke();
                 let labelY = drawXAxisAt + 6;
-                if(drawXAxisAt > height - 15) labelY = drawXAxisAt - 15; // Push label up if at bottom edge
-                ctx.fillText(val.toFixed(2), cx, labelY);
+                if(drawXAxisAt > h - 15) labelY = drawXAxisAt - 15; 
+                targetCtx.fillText(val.toFixed(2), cx, labelY);
             }
 
-            // Y Axis Ticks
-            ctx.textAlign = "right"; ctx.textBaseline = "middle";
+            targetCtx.textAlign = "right"; targetCtx.textBaseline = "middle";
             for(let i=0; i<=numTicks; i++) {
                 let val = yMin + i*(yMax-yMin)/numTicks;
-                let cy = height - ((val - yMin) / (yMax - yMin) * height);
-                ctx.beginPath(); ctx.moveTo(drawYAxisAt - 4, cy); ctx.lineTo(drawYAxisAt + 4, cy); ctx.stroke();
-                
+                let cy = h - ((val - yMin) / (yMax - yMin) * h);
+                targetCtx.beginPath(); targetCtx.moveTo(drawYAxisAt - 4, cy); targetCtx.lineTo(drawYAxisAt + 4, cy); targetCtx.stroke();
                 let labelX = drawYAxisAt - 6;
-                if(drawYAxisAt < 30) { ctx.textAlign = "left"; labelX = drawYAxisAt + 6; } else { ctx.textAlign = "right"; }
-                ctx.fillText(val.toFixed(2), labelX, cy);
+                if(drawYAxisAt < 30) { targetCtx.textAlign = "left"; labelX = drawYAxisAt + 6; } else { targetCtx.textAlign = "right"; }
+                targetCtx.fillText(val.toFixed(2), labelX, cy);
             }
 
-            // Draw Axis Labels
-            ctx.font = "bold 14px Arial"; ctx.fillStyle = "#000";
-            ctx.textAlign = "right";
-            ctx.fillText("X Axis", width - 10, Math.min(Math.max(drawXAxisAt - 15, 20), height - 10));
-            ctx.textAlign = "left";
-            ctx.fillText("Y Axis", Math.min(Math.max(drawYAxisAt + 15, 10), width - 50), 20);
+            // Labels
+            targetCtx.font = "bold 14px Arial"; targetCtx.fillStyle = "#000";
+            targetCtx.textAlign = "right"; targetCtx.fillText("X Axis", w - 10, Math.min(Math.max(drawXAxisAt - 15, 20), h - 10));
+            targetCtx.textAlign = "left"; targetCtx.fillText("Y Axis", Math.min(Math.max(drawYAxisAt + 15, 10), w - 50), 20);
 
-            // Vector Field Generation
+            // Vector Field
             let maxMag = 0.001; let vectors = [];
             for (let i = 0; i <= steps; i++) {
                 for (let j = 0; j <= steps; j++) {
@@ -472,53 +478,53 @@
                 }
             }
 
-            let maxArrowLength = Math.min(width/steps, height/steps) * 0.9 * arrowScale;
+            let maxArrowLength = Math.min(w/steps, h/steps) * 0.9 * arrowScale;
             vectors.forEach(v => {
                 let u = v.dxdt / v.mag; let v_dir = v.dydt / v.mag;
                 let relativeMag = v.mag / maxMag;
                 let len = Math.max(3, maxArrowLength * Math.pow(relativeMag, 0.4)); 
-                let cx = (v.x - xMin) / (xMax - xMin) * width;
-                let cy = height - ((v.y - yMin) / (yMax - yMin) * height); 
-                drawArrow(ctx, cx, cy, cx + (u * len), cy - (v_dir * len), v.mag, maxMag);
+                let cx = (v.x - xMin) / (xMax - xMin) * w;
+                let cy = h - ((v.y - yMin) / (yMax - yMin) * h); 
+                drawArrow(targetCtx, cx, cy, cx + (u * len), cy - (v_dir * len), v.mag, maxMag);
             });
 
-            // Draw Phase Portrait Trajectories
+            // Trajectories
             trajectories.forEach(start => {
-                [-1, 1].forEach(direction => { // Draw forwards and backwards in time
-                    ctx.beginPath();
-                    let cx = (start.x - xMin) / (xMax - xMin) * width;
-                    let cy = height - ((start.y - yMin) / (yMax - yMin) * height);
-                    ctx.moveTo(cx, cy);
+                [-1, 1].forEach(direction => { 
+                    targetCtx.beginPath();
+                    let cx = (start.x - xMin) / (xMax - xMin) * w;
+                    let cy = h - ((start.y - yMin) / (yMax - yMin) * h);
+                    targetCtx.moveTo(cx, cy);
                     let curr = {x: start.x, y: start.y};
                     let dt = direction * 0.02; 
                     for(let step=0; step<500; step++) {
                         curr = rk4(curr.x, curr.y, dt, evalDx, evalDy);
                         if(curr.x < xMin || curr.x > xMax || curr.y < yMin || curr.y > yMax) break;
-                        cx = (curr.x - xMin) / (xMax - xMin) * width;
-                        cy = height - ((curr.y - yMin) / (yMax - yMin) * height);
-                        ctx.lineTo(cx, cy);
+                        cx = (curr.x - xMin) / (xMax - xMin) * w;
+                        cy = h - ((curr.y - yMin) / (yMax - yMin) * h);
+                        targetCtx.lineTo(cx, cy);
                     }
-                    ctx.strokeStyle = start.color; // Unique color for trajectory
-                    ctx.lineWidth = 2.5;
-                    ctx.stroke();
+                    targetCtx.strokeStyle = start.color; 
+                    targetCtx.lineWidth = 2.5;
+                    targetCtx.stroke();
                 });
                 
-                // Highlight starting dot
-                ctx.beginPath();
-                ctx.arc((start.x - xMin) / (xMax - xMin) * width, height - ((start.y - yMin) / (yMax - yMin) * height), 5, 0, 2*Math.PI);
-                ctx.fillStyle = start.color; ctx.fill();
-                ctx.strokeStyle = "white"; ctx.lineWidth = 1.5; ctx.stroke();
+                targetCtx.beginPath();
+                targetCtx.arc((start.x - xMin) / (xMax - xMin) * w, h - ((start.y - yMin) / (yMax - yMin) * h), 5, 0, 2*Math.PI);
+                targetCtx.fillStyle = start.color; targetCtx.fill();
+                targetCtx.strokeStyle = "white"; targetCtx.lineWidth = 1.5; targetCtx.stroke();
             });
 
-            // Draw Equilibrium Points
+            // Equilibria
             if (showEq) {
                 let eqs = findEquilibria(evalDx, evalDy, xMin, xMax, yMin, yMax);
                 eqs.forEach(eq => {
-                    let cx = (eq.x - xMin) / (xMax - xMin) * width;
-                    let cy = height - ((eq.y - yMin) / (yMax - yMin) * height);
-                    drawEquilibriumMarker(ctx, cx, cy, eq.type);
+                    let cx = (eq.x - xMin) / (xMax - xMin) * w;
+                    let cy = h - ((eq.y - yMin) / (yMax - yMin) * h);
+                    drawEquilibriumMarker(targetCtx, cx, cy, eq.type);
                 });
             }
+
             // Copyright swadesh Watermark
             targetCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
             targetCtx.font = "italic bold 16px Arial";
@@ -526,6 +532,7 @@
             targetCtx.textBaseline = "bottom";
             targetCtx.fillText("© Swadesh", w - 10, h - 10);
         }
+
         // Export Functionality
         document.getElementById('exportBtn').addEventListener('click', function() {
             const scale = parseInt(document.getElementById('exportRes').value);
@@ -550,7 +557,8 @@
             link.href = offCanvas.toDataURL(format, 1.0);
             link.click();
         });
-        // Add Multi-Colored Trajectory on Canvas Click
+
+        // Click on Canvas to add Trajectories
         canvas.addEventListener('mousedown', function(e) {
             const rect = canvas.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
@@ -561,11 +569,9 @@
             const yMin = parseFloat(document.getElementById('yMin').value);
             const yMax = parseFloat(document.getElementById('yMax').value);
 
-            // Convert pixel to math coordinates
             const mathX = xMin + (mouseX / canvas.width) * (xMax - xMin);
             const mathY = yMin + ((canvas.height - mouseY) / canvas.height) * (yMax - yMin);
             
-            // Assign next color in the palette
             const color = trajColors[trajColorIndex % trajColors.length];
             trajColorIndex++;
 
@@ -573,9 +579,8 @@
             renderField();
         });
 
-        // Setup base event listeners
+        // Event Listeners
         paramListInput.addEventListener('input', buildSliders);
-        
         const inputs = document.querySelectorAll('.controls-grid > .control-group input:not([type="range"])');
         inputs.forEach(input => { 
             if(input.id !== 'paramList') input.addEventListener('input', renderField); 
@@ -583,6 +588,7 @@
         
         document.getElementById('arrowScale').addEventListener('input', renderField);
         document.getElementById('gridSteps').addEventListener('input', renderField);
+        document.getElementById('numTicks').addEventListener('input', renderField);
         document.getElementById('showEquilibria').addEventListener('change', renderField);
 
         document.getElementById('clearLinesBtn').addEventListener('click', () => {
@@ -592,26 +598,20 @@
         document.getElementById('resetBtn').addEventListener('click', () => {
             document.getElementById('paramList').value = "a, b, c, d";
             paramState = { 
-                a: {val: 0.6, min: -5, max: 5}, 
-                b: {val: 1.3, min: -5, max: 5}, 
-                c: {val: 1.0, min: -5, max: 5}, 
-                d: {val: 1.0, min: -5, max: 5} 
+                a: {val: 0.6, min: -5, max: 5}, b: {val: 1.3, min: -5, max: 5}, 
+                c: {val: 1.0, min: -5, max: 5}, d: {val: 1.0, min: -5, max: 5} 
             };
             buildSliders();
             
             document.getElementById('eqX').value = "a*x - b*x*y";
             document.getElementById('eqY').value = "c*x*y - d*y";
-            document.getElementById('xMin').value = -0.5;
-            document.getElementById('xMax').value = 2.5;
-            document.getElementById('yMin').value = -0.5;
-            document.getElementById('yMax').value = 2.5;
-            document.getElementById('arrowScale').value = 1.0;
-            document.getElementById('gridSteps').value = 22;
-            document.getElementById('numTicks').value = 6;
-            document.getElementById('showEquilibria').checked = true;
-            trajectories = [];
-            trajColorIndex = 0;
-            renderField();
+            document.getElementById('xMin').value = -0.5; document.getElementById('xMax').value = 2.5;
+            document.getElementById('yMin').value = -0.5; document.getElementById('yMax').value = 2.5;
+            document.getElementById('arrowScale').value = 1.0; document.getElementById('gridSteps').value = 22;
+            document.getElementById('numTicks').value = 6; document.getElementById('showEquilibria').checked = true;
+            document.getElementById('exportRes').value = "1"; document.getElementById('exportFormat').value = "image/png";
+            
+            trajectories = []; trajColorIndex = 0; renderField();
         });
 
         // Initialization
