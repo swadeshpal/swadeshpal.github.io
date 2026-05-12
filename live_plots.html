@@ -95,107 +95,112 @@
 
     <section>
         <h2><i class="fas fa-flask"></i> Vector Field Generator</h2>
+<div class="simulation-container">
+            <p style="font-size: 0.95em; color: #555; margin-bottom: 20px;">
+                <em>Define your parameters, set boundaries, write custom ODEs, and click anywhere on the graph below to draw trajectories in real time! Use the export panel at the bottom to download high-resolution images for publications.</em>
+            </p>
 
-        <div class="research-topic">
-
-                       <div class="simulation-container">
-                <h4 style="color: var(--primary-color); margin-bottom: 5px;">
-                    <i class="fas fa-chart-area"></i> Generalized Phase Plane Generator
-                </h4>
-                <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">
-                    <em><strong>Interactive Phase Portrait:</strong> Define parameters, set boundaries, write ODEs, and click the graph to draw trajectories! Use the export tool to download high-res images for papers.</em>
-                </p>
-
-                <div class="controls-grid">
-                    
-                    <div class="control-group full-width">
-                        <label for="paramList">Define Parameters (comma separated names):</label>
-                        <input type="text" id="paramList" value="a, b, c, d" placeholder="e.g. alpha, beta, gamma">
-                    </div>
-
-                    <div id="dynamicSliders" class="full-width"></div>
-
-                    <div class="control-group equation-group">
-                        <label for="eqX">dx/dt = f(x,y)</label>
-                        <input type="text" id="eqX" value="a*x - b*x*y">
-                    </div>
-                    <div class="control-group equation-group">
-                        <label for="eqY">dy/dt = g(x,y)</label>
-                        <input type="text" id="eqY" value="c*x*y - d*y">
-                    </div>
-
-                    <div class="control-group">
-                        <label for="xMin">x Min:</label>
-                        <input type="number" id="xMin" value="-0.5" step="0.5">
-                    </div>
-                    <div class="control-group">
-                        <label for="xMax">x Max:</label>
-                        <input type="number" id="xMax" value="2.5" step="0.5">
-                    </div>
-                    <div class="control-group">
-                        <label for="yMin">y Min:</label>
-                        <input type="number" id="yMin" value="-0.5" step="0.5">
-                    </div>
-                    <div class="control-group">
-                        <label for="yMax">y Max:</label>
-                        <input type="number" id="yMax" value="2.5" step="0.5">
-                    </div>
-                    
-                    <div class="control-group slider-group" style="background: none; border: none; padding: 0;">
-                        <label for="arrowScale" style="display:flex; justify-content: space-between;">Arrow Length: <span id="valArrowScale">1.0</span></label>
-                        <input type="range" id="arrowScale" min="0.1" max="3.0" step="0.1" value="1.0">
-                    </div>
-                    <div class="control-group slider-group" style="background: none; border: none; padding: 0;">
-                        <label for="gridSteps">Resolution (Arrows):</label>
-                        <input type="range" id="gridSteps" min="10" max="40" step="1" value="22">
-                    </div>
-                    <div class="control-group slider-group" style="background: none; border: none; padding: 0;">
-                        <label for="numTicks">Axis Tick Count:</label>
-                        <input type="number" id="numTicks" min="2" max="20" step="1" value="6">
-                    </div>
-                    <div class="control-group checkbox-group" style="justify-content: start;">
-                        <input type="checkbox" id="showEquilibria" checked>
-                        <label for="showEquilibria">Show Equilibria</label>
-                    </div>
-
-                    <div class="control-group full-width" style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 15px;">
-                        <label>Export Graph Settings:</label>
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
-                            <select id="exportRes" style="flex: 1; max-width: 150px;">
-                                <option value="1">1x (Standard)</option>
-                                <option value="2">2x (High Res)</option>
-                                <option value="3">3x (Print 300dpi)</option>
-                                <option value="4">4x (Ultra HD)</option>
-                            </select>
-                            <select id="exportFormat" style="flex: 1; max-width: 120px;">
-                                <option value="image/png">PNG</option>
-                                <option value="image/jpeg">JPEG</option>
-                            </select>
-                            <button id="exportBtn" class="btn" style="background-color: #27ae60; color: white;"><i class="fas fa-download"></i> Export Graph</button>
-                        </div>
-                    </div>
-                    
-                    <div class="control-group full-width" style="display: flex; flex-direction: row; gap: 10px; justify-content: center; margin-top: 15px;">
-                        <button id="clearLinesBtn" class="btn"><i class="fas fa-eraser"></i> Clear Trajectories</button>
-                        <button id="resetBtn" class="btn" style="background-color: #e74c3c; color: white;"><i class="fas fa-undo"></i> Reset Default System</button>
-                    </div>
+            <div class="controls-grid">
+                
+                <div class="control-group full-width">
+                    <label for="paramList">Define Parameters (comma separated names):</label>
+                    <input type="text" id="paramList" value="a, b, c, d" placeholder="e.g. alpha, beta, gamma">
                 </div>
 
-                <canvas id="vectorFieldCanvas" width="650" height="450"></canvas>
-                <div class="legend-box">
-                    <strong>Equilibrium Stability:</strong>
-                    <div class="legend-item"><span class="marker-icon marker-stable"></span> Stable (Sink)</div>
-                    <div class="legend-item"><span class="marker-icon marker-unstable"></span> Unstable (Source)</div>
-                    <div class="legend-item"><span class="marker-icon marker-saddle"></span> Saddle</div>
-                    <div class="legend-item"><span class="marker-icon marker-center"></span> Center / Degenerate</div>
+                <div id="dynamicSliders" class="full-width"></div>
+
+                <div class="control-group equation-group">
+                    <label for="eqX">dx/dt = f(x,y)</label>
+                    <input type="text" id="eqX" value="a*x - b*x*y">
                 </div>
-                <p id="errorMessage" style="color: red; display: none; margin-top: 10px;"></p>
+                <div class="control-group equation-group">
+                    <label for="eqY">dy/dt = g(x,y)</label>
+                    <input type="text" id="eqY" value="c*x*y - d*y">
+                </div>
+
+                <div class="control-group">
+                    <label for="xMin">x Min:</label>
+                    <input type="number" id="xMin" value="-0.5" step="0.5">
+                </div>
+                <div class="control-group">
+                    <label for="xMax">x Max:</label>
+                    <input type="number" id="xMax" value="2.5" step="0.5">
+                </div>
+                <div class="control-group">
+                    <label for="yMin">y Min:</label>
+                    <input type="number" id="yMin" value="-0.5" step="0.5">
+                </div>
+                <div class="control-group">
+                    <label for="yMax">y Max:</label>
+                    <input type="number" id="yMax" value="2.5" step="0.5">
+                </div>
+                
+                <div class="control-group slider-group" style="background: none; border: none; padding: 0;">
+                    <label for="arrowScale" style="display:flex; justify-content: space-between;">Arrow Length: <span id="valArrowScale">1.0</span></label>
+                    <input type="range" id="arrowScale" min="0.1" max="3.0" step="0.1" value="1.0">
+                </div>
+                <div class="control-group slider-group" style="background: none; border: none; padding: 0;">
+                    <label for="gridSteps" style="display:flex; justify-content: space-between;">Resolution (Arrows): <span id="valGridSteps">22</span></label>
+                    <input type="range" id="gridSteps" min="10" max="60" step="1" value="22">
+                </div>
+                <div class="control-group slider-group" style="background: none; border: none; padding: 0;">
+                    <label for="numTicks" style="display:flex; justify-content: space-between;">Axis Ticks:</label>
+                    <input type="number" id="numTicks" min="2" max="20" step="1" value="6">
+                </div>
+                <div class="control-group checkbox-group" style="justify-content: start; margin-top: 5px;">
+                    <input type="checkbox" id="showEquilibria" checked>
+                    <label for="showEquilibria">Show Equilibria</label>
+                </div>
+                
+                <div class="control-group full-width" style="display: flex; flex-direction: row; gap: 10px; justify-content: center; margin-top: 5px; padding-top: 15px; border-top: 1px solid #eee;">
+                    <button id="clearLinesBtn" class="btn"><i class="fas fa-eraser"></i> Clear Trajectories</button>
+                    <button id="resetBtn" class="btn" style="background-color: #e74c3c; color: white;"><i class="fas fa-undo"></i> Reset Default System</button>
+                </div>
             </div>
+
+            <canvas id="vectorFieldCanvas" width="650" height="450"></canvas>
+            <div class="legend-box">
+                <strong>Equilibrium Stability:</strong>
+                <div class="legend-item"><span class="marker-icon marker-stable"></span> Stable (Sink)</div>
+                <div class="legend-item"><span class="marker-icon marker-unstable"></span> Unstable (Source)</div>
+                <div class="legend-item"><span class="marker-icon marker-saddle"></span> Saddle</div>
+                <div class="legend-item"><span class="marker-icon marker-center"></span> Center / Degenerate</div>
+            </div>
+            <p id="errorMessage" style="color: red; display: none; margin-top: 10px;"></p>
+
+            <div class="export-section">
+                <label style="font-weight: bold; color: var(--primary-color); font-size: 1.1em;"><i class="fas fa-download"></i> Image Export Settings</label>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: flex-start; align-items: flex-end; margin-top: 15px;">
+                    <div style="flex: 1; min-width: 180px; display: flex; flex-direction: column;">
+                        <label for="colormap" style="font-weight: bold; margin-bottom: 5px; font-size: 0.9em; color: var(--secondary-color);">Vector Colormap:</label>
+                        <select id="colormap" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                            <option value="default">Jet (Blue to Red)</option>
+                            <option value="cool">Cool (Cyan to Magenta)</option>
+                            <option value="hot">Hot (Red to Yellow)</option>
+                            <option value="viridis">Viridis (Purple to Green)</option>
+                            <option value="monochrome">Grayscale</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1; min-width: 180px; display: flex; flex-direction: column;">
+                        <label for="exportRes" style="font-weight: bold; margin-bottom: 5px; font-size: 0.9em; color: var(--secondary-color); display:flex; justify-content: space-between;">Export Scale: <span id="valExportRes">1x</span></label>
+                        <input type="range" id="exportRes" min="1" max="5" step="1" value="1" style="width: 100%;">
+                    </div>
+                    <div style="flex: 1; min-width: 120px; display: flex; flex-direction: column;">
+                        <label for="exportFormat" style="font-weight: bold; margin-bottom: 5px; font-size: 0.9em; color: var(--secondary-color);">Format:</label>
+                        <select id="exportFormat" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                            <option value="image/png">PNG</option>
+                            <option value="image/jpeg">JPEG</option>
+                        </select>
+                    </div>
+                    <button id="exportBtn" class="btn" style="background-color: #27ae60; color: white; height: 38px; padding: 0 25px;"><i class="fas fa-camera"></i> Save Plot</button>
+                </div>
+            </div>
+
         </div>
     </section>
 
     <footer>
-        <p>&copy; 2026 Swadesh Pal (@swadesh). All rights reserved.</p>
+        <p>&copy; 2026 Swadesh. All rights reserved.</p>
     </footer>
 </div>
 
@@ -218,7 +223,6 @@
             d: {val: 1.0, min: -5, max: 5} 
         };
 
-        // Rebuild Sliders
         function buildSliders() {
             const names = paramListInput.value.split(',').map(s => s.trim()).filter(s => s);
             dynamicSlidersContainer.innerHTML = '';
@@ -278,7 +282,7 @@
             return new Function('x', 'y', ...paramNames, `with(Math) { return ${expression}; }`);
         }
 
-        function drawArrow(targetCtx, fromx, fromy, tox, toy, magnitude, maxMag) {
+        function drawArrow(targetCtx, fromx, fromy, tox, toy, magnitude, maxMag, colormap) {
             const headlen = 5; 
             const angle = Math.atan2(toy - fromy, tox - fromx);
             targetCtx.beginPath();
@@ -289,8 +293,26 @@
             targetCtx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
             
             let relativeMag = Math.min(magnitude / (maxMag || 1), 1);
-            const hue = Math.max(0, 240 - (relativeMag * 240)); 
-            targetCtx.strokeStyle = `hsla(${hue}, 80%, 50%, 0.6)`;
+            let hue, sat, light;
+
+            if (colormap === 'cool') {
+                hue = 180 + relativeMag * 120; // Cyan to Magenta
+                sat = '80%'; light = '50%';
+            } else if (colormap === 'hot') {
+                hue = 0 + relativeMag * 60; // Red to Yellow
+                sat = '100%'; light = '50%';
+            } else if (colormap === 'viridis') {
+                hue = 280 - relativeMag * 160; // Purple to Green
+                sat = '70%'; light = '50%';
+            } else if (colormap === 'monochrome') {
+                hue = 0; sat = '0%'; 
+                light = (70 - relativeMag * 60) + '%'; // Light gray to black
+            } else { // default jet
+                hue = Math.max(0, 240 - (relativeMag * 240)); 
+                sat = '80%'; light = '50%';
+            }
+
+            targetCtx.strokeStyle = `hsla(${hue}, ${sat}, ${light}, 0.6)`;
             targetCtx.lineWidth = 1.0;
             targetCtx.stroke();
         }
@@ -385,9 +407,7 @@
             return eqs;
         }
 
-        // Render Field Engine (Now accepts any Canvas Context for High-Res Export)
         function renderField(targetCtx = defaultCtx, w = canvas.width, h = canvas.height) {
-            // Fill background white for proper JPEG export
             targetCtx.fillStyle = 'white';
             targetCtx.fillRect(0, 0, w, h);
 
@@ -400,9 +420,11 @@
             const steps = parseInt(document.getElementById('gridSteps').value);
             const arrowScale = parseFloat(document.getElementById('arrowScale').value);
             const showEq = document.getElementById('showEquilibria').checked;
+            const colormap = document.getElementById('colormap').value;
             let numTicks = parseInt(document.getElementById('numTicks').value);
             
             document.getElementById('valArrowScale').innerText = arrowScale.toFixed(1);
+            document.getElementById('valGridSteps').innerText = steps;
 
             if (isNaN(xMin) || isNaN(xMax) || isNaN(yMin) || isNaN(yMax) || xMin >= xMax || yMin >= yMax) {
                 errorMsg.innerText = "Error: Invalid bounds. Ensure Max > Min.";
@@ -483,10 +505,10 @@
             vectors.forEach(v => {
                 let u = v.dxdt / v.mag; let v_dir = v.dydt / v.mag;
                 let relativeMag = v.mag / maxMag;
-                let len = Math.max(3, maxArrowLength * Math.pow(relativeMag, 0.4)); 
+                let len = Math.max(1, maxArrowLength * Math.pow(relativeMag, 0.4)); 
                 let cx = (v.x - xMin) / (xMax - xMin) * w;
                 let cy = h - ((v.y - yMin) / (yMax - yMin) * h); 
-                drawArrow(targetCtx, cx, cy, cx + (u * len), cy - (v_dir * len), v.mag, maxMag);
+                drawArrow(targetCtx, cx, cy, cx + (u * len), cy - (v_dir * len), v.mag, maxMag, colormap);
             });
 
             // Trajectories
@@ -526,7 +548,7 @@
                 });
             }
 
-            // Copyright swadesh Watermark
+            // Copyright Watermark
             targetCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
             targetCtx.font = "italic bold 16px Arial";
             targetCtx.textAlign = "right";
@@ -537,24 +559,19 @@
         // Export Functionality
         document.getElementById('exportBtn').addEventListener('click', function() {
             const scale = parseInt(document.getElementById('exportRes').value);
-            const format = document.getElementById('exportFormat').value; // 'image/png' or 'image/jpeg'
+            const format = document.getElementById('exportFormat').value; 
             
-            // Create offscreen high-res canvas
             const offCanvas = document.createElement('canvas');
             offCanvas.width = canvas.width * scale;
             offCanvas.height = canvas.height * scale;
             const offCtx = offCanvas.getContext('2d');
             
-            // Auto-scale drawing instructions
             offCtx.scale(scale, scale);
-            
-            // Render on high-res canvas
             renderField(offCtx, canvas.width, canvas.height);
             
-            // Trigger Download
             const link = document.createElement('a');
             const ext = format === 'image/jpeg' ? 'jpg' : 'png';
-            link.download = `Phase_Portrait_@swadesh_${new Date().getTime()}.${ext}`;
+            link.download = `Phase_Portrait_Swadesh_${new Date().getTime()}.${ext}`;
             link.href = offCanvas.toDataURL(format, 1.0);
             link.click();
         });
@@ -580,17 +597,23 @@
             renderField();
         });
 
-        // Event Listeners
+        // Event Listeners (Fixed argument passing)
         paramListInput.addEventListener('input', buildSliders);
+        
         const inputs = document.querySelectorAll('.controls-grid > .control-group input:not([type="range"])');
         inputs.forEach(input => { 
-            if(input.id !== 'paramList') input.addEventListener('input', renderField); 
+            if(input.id !== 'paramList') input.addEventListener('input', () => renderField()); 
         });
         
-        document.getElementById('arrowScale').addEventListener('input', renderField);
-        document.getElementById('gridSteps').addEventListener('input', renderField);
-        document.getElementById('numTicks').addEventListener('input', renderField);
-        document.getElementById('showEquilibria').addEventListener('change', renderField);
+        document.getElementById('arrowScale').addEventListener('input', () => renderField());
+        document.getElementById('gridSteps').addEventListener('input', () => renderField());
+        document.getElementById('numTicks').addEventListener('input', () => renderField());
+        document.getElementById('showEquilibria').addEventListener('change', () => renderField());
+        document.getElementById('colormap').addEventListener('change', () => renderField());
+        
+        document.getElementById('exportRes').addEventListener('input', function(e) {
+            document.getElementById('valExportRes').innerText = e.target.value + "x";
+        });
 
         document.getElementById('clearLinesBtn').addEventListener('click', () => {
             trajectories = []; renderField();
@@ -608,9 +631,11 @@
             document.getElementById('eqY').value = "c*x*y - d*y";
             document.getElementById('xMin').value = -0.5; document.getElementById('xMax').value = 2.5;
             document.getElementById('yMin').value = -0.5; document.getElementById('yMax').value = 2.5;
-            document.getElementById('arrowScale').value = 1.0; document.getElementById('gridSteps').value = 22;
+            document.getElementById('arrowScale').value = 1.0; document.getElementById('valArrowScale').innerText = "1.0";
+            document.getElementById('gridSteps').value = 22; document.getElementById('valGridSteps').innerText = "22";
             document.getElementById('numTicks').value = 6; document.getElementById('showEquilibria').checked = true;
-            document.getElementById('exportRes').value = "1"; document.getElementById('exportFormat').value = "image/png";
+            document.getElementById('exportRes').value = "1"; document.getElementById('valExportRes').innerText = "1x";
+            document.getElementById('exportFormat').value = "image/png"; document.getElementById('colormap').value = "default";
             
             trajectories = []; trajColorIndex = 0; renderField();
         });
@@ -621,3 +646,4 @@
 </script>
 </body>
 </html>
+        
